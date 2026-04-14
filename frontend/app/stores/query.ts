@@ -17,6 +17,8 @@ export interface QueryAST {
   from: string
   joins: { table: string; on: string; type: 'INNER' | 'LEFT' }[]
   where: { column: string; operator: string; value: any; logic: 'AND' | 'OR' }[]
+  sorts: { column: string; direction: 'ASC' | 'DESC' }[]
+  limit: number
 }
 
 export const useQueryStore = defineStore('query', {
@@ -25,7 +27,9 @@ export const useQueryStore = defineStore('query', {
       select: [],
       from: '',
       joins: [],
-      where: []
+      where: [],
+      sorts: [],
+      limit: 100
     } as QueryAST,
     availableTables: [] as TableMetadata[],
     activeTableName: '' as string,
@@ -70,7 +74,7 @@ export const useQueryStore = defineStore('query', {
         this.availableTables = schema.tables
         
         if (!this.query.from && schema.tables && schema.tables.length > 0) {
-          this.query.from = schema.tables[0].name
+          this.query.from = schema.tables[0]!.name
         }
       } catch (e: any) {
         console.error('Schema fetch error:', e)

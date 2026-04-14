@@ -204,7 +204,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   function moveColumn(from: number, to: number) {
     const arr = [...selectedColumns.value]
     const [item] = arr.splice(from, 1)
-    arr.splice(to, 0, item)
+    arr.splice(to, 0, item!)
     selectedColumns.value = arr
   }
 
