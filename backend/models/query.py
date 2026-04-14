@@ -20,7 +20,7 @@ class JoinCondition(BaseModel):
 class Join(BaseModel):
     type: JoinType
     table: str
-    on: JoinCondition
+    on: Union[str, JoinCondition]
 
 class Operator(str, Enum):
     EQ = "="

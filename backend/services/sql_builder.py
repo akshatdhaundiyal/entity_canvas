@@ -15,7 +15,11 @@ def build_sql_from_ast(ast: QueryAST) -> str:
     # Add Joins
     if ast.joins:
         for join in ast.joins:
-            on_clause = f"{join.on.left} = {join.on.right}"
+            if isinstance(join.on, str):
+                on_clause = join.on
+            else:
+                on_clause = f"{join.on.left} = {join.on.right}"
+            
             query = query.join(
                 join.table,
                 on=on_clause,

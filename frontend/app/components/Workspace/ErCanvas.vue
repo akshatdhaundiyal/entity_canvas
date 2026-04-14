@@ -242,12 +242,12 @@ function resetView() {
         :d="rel.path"
         fill="none"
         :stroke="rel.color"
-        stroke-width="1.5"
-        stroke-opacity="0.45"
-        stroke-dasharray="5 3"
+        :stroke-width="(ws.hoveredColumn === `${rel.edge.fromTable}.${rel.edge.fromCol}` || ws.hoveredTable === rel.edge.fromTable || ws.hoveredTable === rel.edge.toTable) ? 2.5 : 1.5"
+        :stroke-opacity="(ws.hoveredColumn === `${rel.edge.fromTable}.${rel.edge.fromCol}` || ws.hoveredTable === rel.edge.fromTable || ws.hoveredTable === rel.edge.toTable) ? 1 : 0.45"
+        :stroke-dasharray="(ws.hoveredColumn === `${rel.edge.fromTable}.${rel.edge.fromCol}` || ws.hoveredTable === rel.edge.fromTable || ws.hoveredTable === rel.edge.toTable) ? '0' : '5 3'"
         :marker-end="`url(#arrow-${rel.edge.fromTable}-${rel.edge.fromCol})`"
         :marker-start="`url(#dot-${rel.edge.fromTable}-${rel.edge.fromCol})`"
-        class="er-line"
+        class="er-line transition-all duration-300 pointer-events-none"
       />
 
       <!-- ── Table boxes ─────────────────────────────────────────── -->
@@ -255,14 +255,17 @@ function resetView() {
         v-for="pos in tableLayout"
         :key="pos.name"
         :transform="`translate(${pos.x}, ${pos.y})`"
-        class="er-table"
+        class="er-table cursor-pointer group"
+        @mouseenter="ws.hoveredTable = pos.name"
+        @mouseleave="ws.resetHover()"
       >
         <!-- Shadow -->
         <rect
           :width="TW" :height="pos.h"
           rx="10" ry="10"
           fill="none"
-          :filter="`drop-shadow(0 8px 24px ${ws.tableColor(pos.name)}30)`"
+          :filter="`drop-shadow(0 8px 32px ${ws.tableColor(pos.name)}${ws.hoveredTable === pos.name ? '60' : '20'})`"
+          class="transition-all duration-300"
         />
 
         <!-- Outer border -->
@@ -270,39 +273,52 @@ function resetView() {
           :width="TW" :height="pos.h"
           rx="10" ry="10"
           fill="#0b1022"
-          :stroke="ws.isTableSelected(pos.name) ? ws.tableColor(pos.name) : 'rgba(255,255,255,0.08)'"
-          :stroke-width="ws.isTableSelected(pos.name) ? 1.5 : 1"
+          :stroke="ws.isTableSelected(pos.name) ? ws.tableColor(pos.name) : (ws.hoveredTable === pos.name ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.08)')"
+          :stroke-width="ws.isTableSelected(pos.name) || ws.hoveredTable === pos.name ? 1.5 : 1"
+          class="transition-all duration-200"
         />
 
         <!-- Header -->
-        <rect
-          :width="TW" :height="HEADER_H"
-          rx="10" ry="10"
-          :fill="ws.tableColor(pos.name)"
-          opacity="0.85"
-        />
-        <!-- Header bottom square corners overlay -->
-        <rect
-          :y="HEADER_H - 10" :width="TW" height="10"
-          :fill="ws.tableColor(pos.name)"
-          opacity="0.85"
-        />
+        <g @click.stop="ws.toggleTable(pos.name)">
+          <rect
+            :width="TW" :height="HEADER_H"
+            rx="10" ry="10"
+            :fill="ws.tableColor(pos.name)"
+            :opacity="ws.isTableSelected(pos.name) ? 0.95 : 0.6"
+            class="transition-opacity duration-200"
+          />
+          <!-- Header bottom square corners overlay -->
+          <rect
+            :y="HEADER_H - 10" :width="TW" height="10"
+            :fill="ws.tableColor(pos.name)"
+            :opacity="ws.isTableSelected(pos.name) ? 0.95 : 0.6"
+            class="transition-opacity duration-200"
+          />
 
-        <!-- Table name -->
-        <text
-          :x="TW / 2" :y="HEADER_H / 2 + 5"
-          text-anchor="middle"
-          font-size="12" font-weight="700" font-family="Inter, sans-serif"
-          fill="white"
-        >{{ pos.name }}</text>
+          <!-- Table name -->
+          <text
+            :x="TW / 2" :y="HEADER_H / 2 + 5"
+            text-anchor="middle"
+            font-size="12" font-weight="700" font-family="Inter, sans-serif"
+            fill="white"
+          >{{ pos.name }}</text>
+        </g>
 
         <!-- Column rows -->
-        <g v-for="(col, ci) in query.availableTables.find(t => t.name === pos.name)?.columns ?? []" :key="col.name">
-          <!-- Row background (alternating) -->
+        <g 
+          v-for="(col, ci) in query.availableTables.find(t => t.name === pos.name)?.columns ?? []" 
+          :key="col.name"
+          class="cursor-pointer"
+          @mouseenter.stop="ws.hoveredColumn = `${pos.name}.${col.name}`"
+          @mouseleave.stop="ws.hoveredColumn = null"
+          @click.stop="ws.toggleColumn(`${pos.name}.${col.name}`)"
+        >
+          <!-- Row background (alternating + hover) -->
           <rect
             :y="HEADER_H + ci * ROW_H" :width="TW" :height="ROW_H"
-            :fill="ci % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.1)'"
+            :fill="ws.hoveredColumn === `${pos.name}.${col.name}` ? 'rgba(255,255,255,0.06)' : (ci % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.1)')"
             :rx="ci === (query.availableTables.find(t => t.name === pos.name)?.columns.length ?? 0) - 1 ? 6 : 0"
+            class="transition-colors duration-150"
           />
 
           <!-- PK icon -->
@@ -311,8 +327,8 @@ function resetView() {
             x="10"
             :y="HEADER_H + ci * ROW_H + ROW_H / 2 + 4"
             font-size="8" font-family="monospace"
-            :fill="col.name === 'id' ? '#fbbf24' : '#94a3b8'"
-            opacity="0.8"
+            :fill="col.name === 'id' ? '#fbbf24' : '#818cf8'"
+            :opacity="ws.hoveredColumn === `${pos.name}.${col.name}` ? 1 : 0.6"
           >{{ col.name === 'id' ? 'PK' : 'FK' }}</text>
 
           <!-- Column name -->
@@ -320,8 +336,9 @@ function resetView() {
             :x="col.name === 'id' || col.name.endsWith('_id') ? 30 : 12"
             :y="HEADER_H + ci * ROW_H + ROW_H / 2 + 4"
             font-size="11" font-family="'JetBrains Mono', monospace"
-            :fill="ws.isColumnSelected(`${pos.name}.${col.name}`) ? '#e2e8f0' : '#64748b'"
+            :fill="ws.isColumnSelected(`${pos.name}.${col.name}`) ? '#e2e8f0' : (ws.hoveredColumn === `${pos.name}.${col.name}` ? '#94a3b8' : '#64748b')"
             :font-weight="ws.isColumnSelected(`${pos.name}.${col.name}`) ? '600' : '400'"
+            class="transition-colors duration-150"
           >{{ col.name }}</text>
 
           <!-- Data type (right-aligned) -->
@@ -330,7 +347,7 @@ function resetView() {
             :y="HEADER_H + ci * ROW_H + ROW_H / 2 + 4"
             text-anchor="end"
             font-size="9" font-family="monospace"
-            fill="rgba(100,116,139,0.6)"
+            :fill="ws.hoveredColumn === `${pos.name}.${col.name}` ? 'rgba(148,163,184,0.8)' : 'rgba(100,116,139,0.4)'"
           >{{ col.data_type }}</text>
 
           <!-- Selected indicator dot -->

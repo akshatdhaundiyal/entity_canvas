@@ -30,6 +30,8 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const activeTab = ref<WorkspaceTab>('tables')
   const selectedTableNames = ref<string[]>([])
   const selectedColumns = ref<string[]>([]) // 'table.column' format
+  const hoveredTable = ref<string | null>(null)
+  const hoveredColumn = ref<string | null>(null) // 'table.column' format
 
   // ── Derived helpers ─────────────────────────────────────────────
   const tableColor = (name: string) => {
@@ -178,10 +180,17 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     selectedColumns.value = arr
   }
 
+  function resetHover() {
+    hoveredTable.value = null
+    hoveredColumn.value = null
+  }
+
   return {
     activeTab,
     selectedTableNames,
     selectedColumns,
+    hoveredTable,
+    hoveredColumn,
     tableColor,
     detectedRelations,
     cascadedColumns,
@@ -192,5 +201,6 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     isTableSelected,
     isColumnSelected,
     moveColumn,
+    resetHover,
   }
 })
