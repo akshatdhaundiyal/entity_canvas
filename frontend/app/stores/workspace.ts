@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { useQueryStore } from './query'
 
-export type WorkspaceTab = 'tables' | 'cascaded' | 'selected' | 'sql'
+export type WorkspaceTab = 'tables' | 'cascaded' | 'selected' | 'filters' | 'sql'
 
 /** Extended table metadata with UI color and FK relations */
 export interface RelationEdge {
@@ -32,6 +32,10 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const selectedColumns = ref<string[]>([]) // 'table.column' format
   const hoveredTable = ref<string | null>(null)
   const hoveredColumn = ref<string | null>(null) // 'table.column' format
+
+  const filters = ref<{ column: string; operator: string; value: any; logic: 'AND' | 'OR' }[]>([])
+  const sorts = ref<{ column: string; direction: 'ASC' | 'DESC' }[]>([])
+  const limit = ref(100)
 
   // ── Derived helpers ─────────────────────────────────────────────
   const tableColor = (name: string) => {
@@ -107,11 +111,11 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 
   /** Generated SQL from selected columns + detected joins */
   const generatedSQL = computed<string>(() => {
-    if (selectedColumns.value.length === 0)
+    const tablesInQuery = [...new Set(selectedColumns.value.map(c => c.split('.')[0] ?? ''))]
+    if (tablesInQuery.length === 0)
       return '-- Select columns to generate SQL'
 
-    const tablesInQuery = [...new Set(selectedColumns.value.map(c => c.split('.')[0]))]
-    const baseTable = tablesInQuery[0]
+    const baseTable = tablesInQuery[0] as string
 
     const selectLines = selectedColumns.value.map(c => {
       const [t, col] = c.split('.')
@@ -119,8 +123,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     })
 
     const joins: string[] = []
-    for (let i = 1; i < tablesInQuery.length; i++) {
-      const t = tablesInQuery[i]
+    for (const t of tablesInQuery.slice(1)) {
       // Find edge linking baseTable ↔ t
       const edge = detectedRelations.value.find(
         e =>
@@ -138,13 +141,38 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       }
     }
 
-    return [
+    const sqlLines = [
       'SELECT',
       selectLines.join(',\n'),
       `FROM ${baseTable}`,
-      ...joins,
-      'LIMIT 100;',
-    ].join('\n')
+    ]
+
+    if (joins.length > 0) sqlLines.push(...joins)
+
+    // Filters
+    if (filters.value.length > 0) {
+      const filterLines = filters.value.map((f, i) => {
+        const prefix = i === 0 ? 'WHERE' : f.logic
+        const val = typeof f.value === 'string' ? `'${f.value}'` : f.value
+        return `${prefix} ${f.column} ${f.operator} ${val}`
+      })
+      sqlLines.push(...filterLines)
+    }
+
+    // Sorting
+    if (sorts.value.length > 0) {
+      const sortLines = sorts.value.map(s => `${s.column} ${s.direction}`)
+      sqlLines.push(`ORDER BY ${sortLines.join(', ')}`)
+    }
+
+    // Limit
+    if (limit.value !== null) {
+      sqlLines.push(`LIMIT ${limit.value};`)
+    } else {
+      sqlLines[sqlLines.length - 1] += ';'
+    }
+
+    return sqlLines.join('\n')
   })
 
   // ── Actions ──────────────────────────────────────────────────────
@@ -185,12 +213,36 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     hoveredColumn.value = null
   }
 
+  function addFilter(col: string) {
+    filters.value.push({ column: col, operator: '=', value: '', logic: 'AND' })
+    activeTab.value = 'filters'
+  }
+
+  function removeFilter(index: number) {
+    filters.value.splice(index, 1)
+  }
+
+  function toggleSort(col: string) {
+    const existing = sorts.value.find(s => s.column === col)
+    if (!existing) {
+      sorts.value.push({ column: col, direction: 'ASC' })
+    } else if (existing.direction === 'ASC') {
+      existing.direction = 'DESC'
+    } else {
+      const idx = sorts.value.findIndex(s => s.column === col)
+      sorts.value.splice(idx, 1)
+    }
+  }
+
   return {
     activeTab,
     selectedTableNames,
     selectedColumns,
     hoveredTable,
     hoveredColumn,
+    filters,
+    sorts,
+    limit,
     tableColor,
     detectedRelations,
     cascadedColumns,
@@ -202,5 +254,8 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     isColumnSelected,
     moveColumn,
     resetHover,
+    addFilter,
+    removeFilter,
+    toggleSort,
   }
 })

@@ -31,6 +31,19 @@ async function runQuery() {
     query.query.select = ws.chosenColumns.map(({ table, col }) => ({ table: table ?? '', column: col ?? '' }))
     query.query.from = baseTable
 
+    // Filters, Sorts, Limit
+    query.query.where = ws.filters.map(f => ({
+      column: f.column,
+      operator: f.operator,
+      value: f.value,
+      logic: f.logic
+    }))
+    query.query.sorts = ws.sorts.map(s => ({
+      column: s.column,
+      direction: s.direction
+    }))
+    query.query.limit = ws.limit
+
     // Auto-construct joins from detected relations
     query.query.joins = []
     for (const t of tablesInQuery.slice(1)) {

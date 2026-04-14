@@ -20,6 +20,7 @@ const tabs: { id: WorkspaceTab; icon: string; label: string }[] = [
   { id: 'tables',   icon: 'i-heroicons-table-cells',         label: 'Tables'   },
   { id: 'cascaded', icon: 'i-heroicons-arrows-right-left',   label: 'Cascaded' },
   { id: 'selected', icon: 'i-heroicons-check-circle',        label: 'Selected' },
+  { id: 'filters',  icon: 'i-heroicons-funnel',              label: 'Filters'  },
   { id: 'sql',      icon: 'i-heroicons-code-bracket',        label: 'SQL'      },
 ]
 

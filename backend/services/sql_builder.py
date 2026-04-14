@@ -61,5 +61,14 @@ def build_sql_from_ast(ast: QueryAST) -> str:
         if where_expression:
             query = query.where(where_expression)
 
+    # Add Sorting
+    if ast.sorts:
+        for sort in ast.sorts:
+            query = query.order_by(f"{sort.column} {sort.direction}")
+
+    # Add Limit
+    if ast.limit:
+        query = query.limit(ast.limit)
+
     # Transpile to Postgres dialect
     return query.sql(dialect="postgres")

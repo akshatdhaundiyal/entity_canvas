@@ -38,11 +38,17 @@ class Condition(BaseModel):
     value: Any
     logic: Optional[str] = "AND" # AND/OR for combining with next condition
 
+class SortCondition(BaseModel):
+    column: str
+    direction: str = "ASC"  # ASC or DESC
+
 class QueryAST(BaseModel):
     select: List[Column]
     from_table: str = Field(..., alias="from")
     joins: Optional[List[Join]] = []
     where: Optional[List[Condition]] = []
+    sorts: Optional[List[SortCondition]] = []
+    limit: Optional[int] = 100
 
     class Config:
         populate_by_name = True

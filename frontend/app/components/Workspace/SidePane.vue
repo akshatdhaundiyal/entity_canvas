@@ -38,13 +38,24 @@ function copySQL() {
   <div class="flex flex-col h-full overflow-hidden">
 
     <!-- Pane header -->
-    <div class="px-4 py-3 border-b border-white/5 shrink-0">
+    <div class="px-4 py-3 border-b border-white/5 shrink-0 flex items-center justify-between">
       <h3 class="text-xs font-semibold uppercase tracking-widest text-slate-500">
         <template v-if="ws.activeTab === 'tables'">Schema Tables</template>
         <template v-else-if="ws.activeTab === 'cascaded'">Cascaded Columns</template>
         <template v-else-if="ws.activeTab === 'selected'">Selected Columns</template>
+        <template v-else-if="ws.activeTab === 'filters'">Filters</template>
         <template v-else-if="ws.activeTab === 'sql'">Generated SQL</template>
       </h3>
+
+      <!-- Limit input -->
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] text-slate-600">LIMIT</span>
+        <input
+          v-model="ws.limit"
+          type="number"
+          class="w-12 bg-white/5 border border-white/10 rounded px-1 py-0.5 text-[10px] text-slate-300 focus:outline-none focus:border-indigo-500"
+        />
+      </div>
     </div>
 
     <!-- Loading state -->
@@ -201,9 +212,29 @@ function copySQL() {
         />
 
         <div class="min-w-0 flex-1">
-          <span class="text-[10px] text-slate-600">{{ tc.split('.')[0] }}.</span>
-          <span class="text-xs font-mono text-slate-300">{{ tc.split('.')[1] }}</span>
+          <span class="text-[10px] text-slate-600 leading-none">{{ tc.split('.')[0] }}.</span>
+          <span class="text-xs font-mono text-slate-300 leading-none block">{{ tc.split('.')[1] }}</span>
         </div>
+
+        <!-- Sort toggle -->
+        <button
+          class="p-1 rounded hover:bg-white/10 transition-colors shrink-0"
+          :class="ws.sorts.find(s => s.column === tc) ? 'text-indigo-400' : 'text-slate-600'"
+          @click="ws.toggleSort(tc)"
+        >
+          <UIcon 
+            :name="ws.sorts.find(s => s.column === tc)?.direction === 'DESC' ? 'i-heroicons-bars-arrow-down' : 'i-heroicons-bars-arrow-up'" 
+            class="size-3.5"
+          />
+        </button>
+
+        <!-- Filter shortcut -->
+        <button
+          class="p-1 rounded hover:bg-white/10 text-slate-600 hover:text-indigo-400 transition-colors shrink-0"
+          @click="ws.addFilter(tc)"
+        >
+          <UIcon name="i-heroicons-funnel" class="size-3.5" />
+        </button>
 
         <!-- Move up/down -->
         <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -235,6 +266,67 @@ function copySQL() {
       <!-- Summary -->
       <div v-if="ws.selectedColumns.length > 0" class="px-4 py-3 border-t border-white/5 text-[10px] text-slate-600">
         {{ ws.selectedColumns.length }} column{{ ws.selectedColumns.length !== 1 ? 's' : '' }} selected
+        <span v-if="ws.sorts.length > 0"> • {{ ws.sorts.length }} sorted</span>
+      </div>
+    </div>
+
+    <!-- ── FILTERS TAB ─────────────────────────────────────────── -->
+    <div v-else-if="ws.activeTab === 'filters'" class="flex-1 overflow-y-auto p-4 space-y-4">
+      <div v-if="ws.filters.length === 0" class="flex flex-col items-center justify-center py-12 text-center">
+        <UIcon name="i-heroicons-funnel" class="size-8 text-slate-700 mb-2" />
+        <p class="text-xs text-slate-600 max-w-[180px]">No filters applied. Use the funnel icon next to selected columns to add one.</p>
+      </div>
+
+      <div
+        v-for="(f, fi) in ws.filters"
+        :key="fi"
+        class="bg-white/[0.03] border border-white/5 rounded-lg p-3 space-y-2 relative group"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono text-indigo-400">{{ f.column }}</span>
+          <button 
+            class="p-1 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+            @click="ws.removeFilter(fi)"
+          >
+            <UIcon name="i-heroicons-trash" class="size-3" />
+          </button>
+        </div>
+
+        <div class="flex gap-2">
+          <select 
+            v-model="f.operator"
+            class="bg-white/5 border border-white/10 rounded px-1.5 py-1 text-xs text-slate-300 focus:outline-none"
+          >
+            <option value="=">=</option>
+            <option value="!=">!=</option>
+            <option value=">">></option>
+            <option value="<"><</option>
+            <option value="LIKE">LIKE</option>
+          </select>
+
+          <input 
+            v-model="f.value"
+            placeholder="Value..."
+            class="flex-1 bg-white/5 border border-white/10 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+          />
+        </div>
+
+        <!-- Logic selector if not first -->
+        <div v-if="fi > 0" class="absolute -top-3 left-1/2 -translate-x-1/2">
+          <select 
+            v-model="f.logic"
+            class="bg-slate-900 border border-white/10 rounded px-1 text-[9px] text-slate-500 font-bold uppercase"
+          >
+            <option value="AND">AND</option>
+            <option value="OR">OR</option>
+          </select>
+        </div>
+      </div>
+
+      <div v-if="ws.filters.length > 0" class="pt-4 border-t border-white/5">
+        <p class="text-[10px] text-slate-600 italic text-center">
+          Filters are applied in order. Logic (AND/OR) connects each filter to the previous one.
+        </p>
       </div>
     </div>
 
