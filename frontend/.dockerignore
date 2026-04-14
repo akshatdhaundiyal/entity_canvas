@@ -1,0 +1,17 @@
+node_modules
+.nuxt
+.output
+.nitro
+.cache
+.data
+dist
+*.log
+.env
+.env.*
+.git
+.github
+.vscode
+.dockerignore
+.gitignore
+package-lock.json
+# Nuxt 3 recommends keeping lock files but in monorepo we might want to be careful

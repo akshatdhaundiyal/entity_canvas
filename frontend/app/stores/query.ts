@@ -66,8 +66,9 @@ export const useQueryStore = defineStore('query', {
     async fetchSchema() {
       this.isLoading = true
       try {
+        const config = useRuntimeConfig()
         console.log('Fetching schema from backend...')
-        const response = await $fetch('http://localhost:8000/api/schema')
+        const response = await $fetch(`${config.public.apiBaseUrl}/api/schema`)
         console.log('Schema received:', response)
         
         const schema = response as { tables: TableMetadata[] }
@@ -103,8 +104,9 @@ export const useQueryStore = defineStore('query', {
       this.error = null
       
       try {
+        const config = useRuntimeConfig()
         console.log('Executing query:', this.query)
-        const response = await $fetch('http://localhost:8000/api/query/execute', {
+        const response = await $fetch(`${config.public.apiBaseUrl}/api/query/execute`, {
           method: 'POST',
           body: this.query
         })
