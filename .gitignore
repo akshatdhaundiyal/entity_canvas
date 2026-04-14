@@ -1,0 +1,41 @@
+# ── Python (backend) ────────────────────────────────────────────
+__pycache__/
+*.py[oc]
+build/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# ── Nuxt / Node (frontend) ──────────────────────────────────────
+# Nuxt dev/build outputs
+frontend/.output
+frontend/.data
+frontend/.nuxt
+frontend/.nitro
+frontend/.cache
+frontend/dist
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# ── Environment files ────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Editor & OS ─────────────────────────────────────────────────
+.DS_Store
+.fleet
+.idea
+.vscode/settings.json
+Thumbs.db
+
+# ── Docker ──────────────────────────────────────────────────────
+# Keep docker-compose.yml tracked; ignore override files
+docker-compose.override.yml
