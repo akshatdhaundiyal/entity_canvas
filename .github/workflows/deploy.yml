@@ -3,6 +3,7 @@ name: Build and Deploy to GCP Cloud Run
 on:
   push:
     branches:
+      - main
       - production
   workflow_dispatch:
 
@@ -62,13 +63,13 @@ jobs:
         run: |
           URL=$(gcloud run services describe entity-canvas-backend --platform managed --region ${{ env.REGION }} --project ${{ env.PROJECT_ID }} --format 'value(status.url)')
           echo "BACKEND_URL=$URL" >> $GITHUB_ENV
-          echo "::set-output name=url::$URL"
+          echo "url=$URL" >> $GITHUB_OUTPUT
 
       # --- FRONTEND STAGE ---
       - name: Build Frontend
         run: |
           docker build \
-            --build-arg NUXT_PUBLIC_API_URL=${{ env.BACKEND_URL }} \
+            --build-arg NUXT_PUBLIC_API_URL=$BACKEND_URL \
             -t ${{ env.FRONTEND_IMAGE }} ./frontend
           docker push ${{ env.FRONTEND_IMAGE }}
 
@@ -81,4 +82,4 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 3000 \
-            --set-env-vars "NUXT_PUBLIC_API_URL=${{ env.BACKEND_URL }}"
+            --set-env-vars "NUXT_PUBLIC_API_URL=$BACKEND_URL"
