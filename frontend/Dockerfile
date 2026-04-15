@@ -8,6 +8,9 @@ COPY package*.json ./
 RUN npm install
 
 # Build application
+ARG NUXT_PUBLIC_API_URL
+ENV NUXT_PUBLIC_API_URL=$NUXT_PUBLIC_API_URL
+
 COPY . .
 RUN npm run build
 
