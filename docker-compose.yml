@@ -1,3 +1,6 @@
+# Docker Compose for Entity Canvas
+# This setup mirrors production standards (8080 internal ports, direct host mapping)
+
 services:
   db:
     image: postgres:15-alpine
@@ -21,8 +24,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8080"
-    env_file:
-      - .env
     environment:
       - DATABASE_URL=postgresql+asyncpg://canvas_user:canvas_pass@db/entity_canvas
       - PORT=8080
