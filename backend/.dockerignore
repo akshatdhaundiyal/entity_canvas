@@ -17,4 +17,7 @@ venv.bak/
 .dockerignore
 .vscode
 .pytest_cache
+*.egg-info
+dist/
+build/
 # uv.lock is intentionally NOT ignored — uv sync requires it for reproducible builds

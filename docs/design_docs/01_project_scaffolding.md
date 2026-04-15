@@ -1,42 +1,64 @@
-# Design Doc 01: Project Scaffolding & Architecture
+# Milestone 01: Project Scaffolding & Core Architecture
 
-## Overview
-Status: **COMPLETED**
-Milestone: 0
-Impact: Core Foundation
+## Objective
+Establish a high-performance monorepo foundation for Entity Canvas utilizing FastAPI (Backend) and Nuxt 4 (Frontend), unified by a shared Query AST.
 
-This document defines the architectural foundation for **Entity Canvas**, a Visual SQL Builder. The goal was to establish a monorepo that separates concerns while maintaining a unified language (Query AST).
+## 🏗️ System Architecture
 
-## Walkthrough
+```mermaid
+graph TD
+    subgraph Frontend [Nuxt 4 / Vue 3]
+        UI[User Interface] --> Store[Pinia Store]
+        Store --> Client[API Client]
+    end
 
-### 1. The Query AST (Shared Language)
-The backbone of the application is a JSON-based Abstract Syntax Tree (AST). It is defined as a series of Pydantic models on the backend and an interface on the frontend.
-- **Select**: List of objects `{table, column, alias}`.
-- **Where**: List of objects `{column, operator, value, logic}`.
-- **From/Joins**: Defined keys for the base table and related joints.
+    subgraph Backend [FastAPI / Python]
+        API[FastAPI Endpoints] --> AST[AST Models]
+        AST --> Transpiler[SQLGlot Builder]
+        Transpiler --> DBService[Database Service]
+    end
 
-### 2. Backend (FastAPI + uv)
-The backend uses **uv** for high-performance dependency management and task execution.
-- **Packaging**: The backend is configured as a formal Python package (`tool.uv.package = true`) using the `hatchling` build-backend in a flat-layout configuration.
-- **Task Runner**: A standardized `dev` script is defined in `pyproject.toml`, allowing the server to be started via `uv run dev`. This command triggers the `main:start` entry point with hot-reload enabled.
-- **SQLGlot Service**: A dedicated service (`services/sql_builder.py`) takes the Pydantic AST and programmatically builds a SQL expression using the SQLGlot library, ensuring it follows **PostgreSQL** dialect and prevents injection.
-- **Execute Endpoint**: A POST endpoint receives the AST, transpiles it, and returns mock results and the generated SQL.
+    subgraph Infrastructure [GCP / Neon]
+        DBService --> PG[(Postgres / Neon)]
+    end
 
-### 3. Frontend (Nuxt 4 + Pinia)
-A modern, dark-mode UI with glassmorphism effects.
-- **Pinia Store**: Manages `currentQuery`.
-- **Components**: 
-  - `TableRegistry`: Draggable columns.
-  - `DropZone`: Interactive select/filter areas.
-  - `ResultTable`: Dynamic data display.
+    Client -- HTTP/JSON --> API
+```
+
+## State Changes
+- **Pinia State**: Initialized `useQueryStore` to manage the `currentQuery` object (AST).
+- **Reactivity**: Implementation of `ref` and `computed` properties for real-time SQL preview updates.
+
+## API Contract
+### `POST /api/query/execute`
+- **Request (QueryAST)**:
+  ```json
+  {
+    "from": "table_name",
+    "select": [{"table": "t", "column": "c", "alias": "a"}],
+    "where": [],
+    "sorts": [],
+    "limit": 100
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "sql": "SELECT ...",
+    "results": [],
+    "status": "success"
+  }
+  ```
+
+## Technical Hurdles
+- **PowerShell Compatibility**: Encounted `mkdir` positional argument errors during automated scaffolding; resolved by using `New-Item` logic.
+- **Backend Import Paths**: Absolute imports (`from backend.models...`) caused `ModuleNotFoundError` in Docker; refactored to directory-relative imports.
+- **uv Task Runner**: `uv run dev` required a specific entry point in `main.py` and `pyproject.toml` script definition.
 
 ## Verification
+- [x] Backend starts via `uv run dev` with hot-reload.
+- [x] Frontend starts via `npm run dev` and communicates with Backend.
+- [x] Transpilation logic verified for simple SELECT/FROM/WHERE queries.
 
-| Test Case | Description | Expected Result | Status |
-|-----------|-------------|-----------------|--------|
-| AST Validation | Send invalid JSON to `/api/query/execute` | 422 Unprocessable Entity | ✅ Pass |
-| SQL Generation | Drag `users.name` to Select | `SELECT users.name FROM users` | ✅ Pass |
-| Filter Logic | Add `age > 18` | `WHERE users.age > 18` | ✅ Pass |
-| Monorepo Check | Verify directories exist | `backend/` and `frontend/` are separate | ✅ Pass |
-| uv Run Dev | Execute `uv run dev` | Server starts with hot-reload | ✅ Pass |
-| IDE Module Search | Check IDE for module errors | No red underlines (with .vscode config) | ✅ Pass |
+> [!NOTE]
+> This milestone establishes the "Rules of Engagement" for the monorepo, including the strict use of `uv` and `SQLGlot`.

@@ -14,4 +14,6 @@ dist
 .dockerignore
 .gitignore
 package-lock.json
+README.md
+Dockerfile
 # Nuxt 3 recommends keeping lock files but in monorepo we might want to be careful
