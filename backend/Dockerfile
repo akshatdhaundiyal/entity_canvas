@@ -20,9 +20,8 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies into the system environment
-# This avoids virtualenv overhead and permission issues in containerized environments
-ENV UV_SYSTEM_PYTHON=1
-RUN uv sync --no-dev --no-install-project
+# This ensures binaries like uvicorn are placed in /usr/local/bin
+RUN uv pip install --system --no-cache -r pyproject.toml
 
 # Copy the actual backend code
 COPY . .
