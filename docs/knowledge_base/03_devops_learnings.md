@@ -2,15 +2,14 @@
 
 This document captures the distilled learnings and technical hurdles identified during the setup of the **CI/CD Pipeline** and **Cloud Run** infrastructure.
 
-## Hurdle: GitHub Environment Secret Access
-- **Problem**: Deployment jobs failed to pick up `GCP_PROJECT_ID` even though it was defined in the repository.
-- **Learning**: GitHub distinguishes between **Repository Secrets** and **Environment Secrets**. Environment secrets can only be accessed if the job explicitly declares the `environment:` it belongs to.
-- **Solution**: Added `environment: production` to the `deploy` jobs in both backend and frontend workflows.
+## Decision: System-Wide Dependency Installation
+- **Problem**: Containerized virtual environments (e.g., `/app/.venv`) often lead to binary permission issues and module discovery failures when running as a non-root user.
+- **Learning**: Installing dependencies into the system site-packages (`uv sync --system`) simplifies the environment path and accessibility for all users within the container.
+- **Solution**: Performed `uv sync --system` as root during build, then switched to `appuser` for execution.
 
-## Hurdle: Cloud Run Port Expectations
-- **Problem**: The container started successfully but Cloud Run returned: `The user-provided container failed to start and listen on the port defined provided by the PORT=8080 environment variable.`
-- **Learning**: Cloud Run injects a `PORT` environment variable (default 8080) and requires the application to listen on that specific port. Hardcoding `8000` causes health check failures.
-- **Solution**: Refactored `main:start` to use `os.getenv("PORT", 8000)` and updated the Dockerfile to use the unified entry point.
+## Hurdle: Cloud Run Port Substitution
+- **Context**: Passing the dynamic `$PORT` from Cloud Run to a Python entry point can be fragile if handled only in application code.
+- **Solution**: Adopting the shell-form `CMD` (e.g., `CMD uvicorn ... --port ${PORT}`) allows the container runtime to perform the substitution natively.
 
 ## Decision: Unified CI/CD Pipeline Lifecycle
 - **Context**: Separate workflows (`deploy-backend`, `deploy-frontend`) led to synchronization issues and "Service Not Found" errors due to missing project context.
@@ -20,11 +19,6 @@ This document captures the distilled learnings and technical hurdles identified 
 ## Refined: Explicit Project Context
 - **Hurdle**: `gcloud run services describe` repeatedly failed with `Cannot find service [entity-canvas-backend]`.
 - **Solution**: Added `--project ${{ secrets.GCP_PROJECT_ID }}` to all `gcloud` commands to ensure the correct project context is maintained across GitHub Runner environments.
-
-## Hurdle: Python Environment Isolation (uv)
-- **Problem**: Container failed with `ModuleNotFoundError: No module named 'fastapi'` even after a successful `uv sync`.
-- **Learning**: `uv sync` creates a virtual environment in `/app/.venv`. Standard `python` calls in the Dockerfile refer to the system Python, which lacks the project dependencies.
-- **Solution**: Injected the venv binary path into the container's environment: `ENV PATH="/app/.venv/bin:$PATH"`. This ensures all `python` commands utilize the synced environment by default.
 
 ## Iteration: Multi-Stage Frontend Dockerfile
 - **Context**: The initial Nuxt Docker image was over 800MB due to node_modules and dev dependencies remaining in the final image.
