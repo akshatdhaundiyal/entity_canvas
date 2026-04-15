@@ -1,0 +1,80 @@
+name: Build and Deploy to GCP Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: ${{ secrets.GCP_REGION }}
+  REPO_NAME: ${{ secrets.GCP_ARTIFACT_REPO }}
+  BACKEND_SERVICE: entity-canvas-backend
+  FRONTEND_SERVICE: entity-canvas-frontend
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --project ${{ env.PROJECT_ID }} --quiet
+
+      # --- BACKEND ---
+      - name: Build and Push Backend
+        run: |
+          IMAGE_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }}"
+          docker build -t $IMAGE_TAG ./backend
+          docker push $IMAGE_TAG
+          echo "BACKEND_IMAGE=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Deploy Backend
+        run: |
+          gcloud run deploy ${{ env.BACKEND_SERVICE }} \
+            --image ${{ env.BACKEND_IMAGE }} \
+            --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars "DATABASE_URL=${{ secrets.NEON_DATABASE_URL }}"
+
+      - name: Get Backend URL
+        id: backend_info
+        run: |
+          URL=$(gcloud run services describe ${{ env.BACKEND_SERVICE }} --region ${{ env.REGION }} --project ${{ env.PROJECT_ID }} --format 'value(status.url)')
+          echo "URL=$URL" >> $GITHUB_OUTPUT
+          echo "Found Backend URL: $URL"
+
+      # --- FRONTEND ---
+      - name: Build and Push Frontend
+        run: |
+          IMAGE_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.FRONTEND_SERVICE }}:${{ github.sha }}"
+          # Note: We pass the Backend URL as a build arg if needed, or set it at runtime
+          docker build -t $IMAGE_TAG ./frontend
+          docker push $IMAGE_TAG
+          echo "FRONTEND_IMAGE=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Deploy Frontend
+        run: |
+          gcloud run deploy ${{ env.FRONTEND_SERVICE }} \
+            --image ${{ env.FRONTEND_IMAGE }} \
+            --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-env-vars "NUXT_PUBLIC_API_URL=${{ steps.backend_info.outputs.URL }}"
