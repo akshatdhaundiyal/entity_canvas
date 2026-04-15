@@ -6,11 +6,19 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Smart Discovery: Automatically bridge localhost to host.docker.internal if in Docker
+def resolve_database_url(url: str) -> str:
+    if not url: return url
+    # Check if inside Docker
+    if os.path.exists("/.dockerenv") and "@localhost" in url:
+        print("🐳 Docker environment detected: Automatically bridging 'localhost' to 'host.docker.internal'")
+        return url.replace("@localhost", "@host.docker.internal")
+    return url
+
+DATABASE_URL = resolve_database_url(os.getenv("DATABASE_URL"))
 
 if not DATABASE_URL:
     print("❌ ERROR: 'DATABASE_URL' environment variable is missing or empty.")
-    print("Please verify that NEON_DATABASE_URL is correctly set in your GitHub Environment secrets.")
     raise ValueError("Missing DATABASE_URL")
 
 # Create Async Engine
