@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useConnectionStore } from './connection'
 
 export interface ColumnMetadata {
   name: string
@@ -67,8 +68,15 @@ export const useQueryStore = defineStore('query', {
       this.isLoading = true
       try {
         const config = useRuntimeConfig()
-        console.log('Fetching schema from backend...')
-        const response = await $fetch(`${config.public.apiBaseUrl}/api/schema`)
+        const connectionStore = useConnectionStore()
+        
+        console.log(`Fetching schema from database: ${connectionStore.activeConnection}`)
+        
+        const response = await $fetch(`${config.public.apiBaseUrl}/api/schema`, {
+          headers: {
+            'X-Database-Alias': connectionStore.activeConnection
+          }
+        })
         console.log('Schema received:', response)
         
         const schema = response as { tables: TableMetadata[] }
@@ -105,10 +113,16 @@ export const useQueryStore = defineStore('query', {
       
       try {
         const config = useRuntimeConfig()
-        console.log('Executing query:', this.query)
+        const connectionStore = useConnectionStore()
+        
+        console.log(`Executing query on database: ${connectionStore.activeConnection}`)
+        
         const response = await $fetch(`${config.public.apiBaseUrl}/api/query/execute`, {
           method: 'POST',
-          body: this.query
+          body: this.query,
+          headers: {
+            'X-Database-Alias': connectionStore.activeConnection
+          }
         })
         console.log('Query response:', response)
 

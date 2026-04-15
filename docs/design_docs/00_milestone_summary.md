@@ -10,7 +10,9 @@ This document serves as the **Active Index** for the development history of Enti
 | **02** | **Query Engine (SQLGlot)** | ✅ COMPLETED | 2026-04-15 15:55 UTC | [02_query_engine](file:///d:/self_work/projects/entity_canvas/docs/design_docs/02_query_engine.md) |
 | **03** | **Interactive Workspace** | ✅ COMPLETED | 2026-04-15 15:55 UTC | [03_interactive_workspace](file:///d:/self_work/projects/entity_canvas/docs/design_docs/03_interactive_workspace.md) |
 | **04** | **DevOps & CI/CD Pipeline** | ✅ COMPLETED | 2026-04-15 15:55 UTC | [04_devops_cicd](file:///d:/self_work/projects/entity_canvas/docs/design_docs/04_devops_cicd.md) |
-| **05** | **Advanced SQL & Joins** | 🏗️ PLANNED | TBD | TBD |
+| **05** | **Multi-Database Support** | ✅ COMPLETED | 2026-04-15 19:40 UTC | [05_multi_database_support](file:///d:/self_work/projects/entity_canvas/docs/design_docs/05_multi_database_support.md) |
+| **06** | **Backend Refactoring & Hardening** | ✅ COMPLETED | 2026-04-15 20:00 UTC | [06_backend_refactoring](file:///d:/self_work/projects/entity_canvas/docs/design_docs/06_backend_refactoring.md) |
+| **07** | **Advanced SQL & Joins** | 🏗️ PLANNED | TBD | TBD |
 
 ---
 
