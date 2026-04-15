@@ -1,24 +1,11 @@
-import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
-from dotenv import load_dotenv
+from config import settings
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Smart Discovery: Automatically bridge localhost to host.docker.internal if in Docker
-def resolve_database_url(url: str) -> str:
-    if not url: return url
-    # Check if inside Docker
-    if os.path.exists("/.dockerenv") and "@localhost" in url:
-        print("🐳 Docker environment detected: Automatically bridging 'localhost' to 'host.docker.internal'")
-        return url.replace("@localhost", "@host.docker.internal")
-    return url
-
-DATABASE_URL = resolve_database_url(os.getenv("DATABASE_URL"))
+DATABASE_URL = settings.database_url
 
 if not DATABASE_URL:
-    print("❌ ERROR: 'DATABASE_URL' environment variable is missing or empty.")
+    print("❌ ERROR: 'DATABASE_URL' is missing from settings.")
     raise ValueError("Missing DATABASE_URL")
 
 # Create Async Engine
