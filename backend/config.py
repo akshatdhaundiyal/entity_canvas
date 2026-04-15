@@ -12,9 +12,22 @@ class Settings(BaseSettings):
     @field_validator("database_url", mode="before")
     @classmethod
     def ensure_async_driver(cls, v: str) -> str:
-        """SQLAlchemy async requires the +asyncpg driver prefix. This auto-adds it."""
-        if v and v.startswith("postgresql://"):
-            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        """
+        Hardens the database URL for async compatibility:
+        1. Auto-adds the +asyncpg driver prefix if missing.
+        2. Converts 'sslmode=require' to 'ssl=require' (required by asyncpg).
+        """
+        if not v:
+            return v
+            
+        # 1. Fix Driver
+        if v.startswith("postgresql://"):
+            v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+            
+        # 2. Fix SSL parameter name (sslmode -> ssl)
+        if "sslmode=" in v:
+            v = v.replace("sslmode=", "ssl=", 1)
+            
         return v
 
     class Config:
