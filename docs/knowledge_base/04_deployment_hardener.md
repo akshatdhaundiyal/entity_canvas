@@ -25,9 +25,12 @@ Using a standard `postgresql://` string in an async engine results in a driver e
 
 ## 4. Neon SSL & Driver Compatibility [IMPLEMENTED]
 ### Problem
-`asyncpg` does not recognize the standard Postgres `sslmode=require` parameter, causing a crash.
+`asyncpg` does not recognize the standard Postgres `sslmode=require` and **`channel_binding=require`** parameters, causing the app to crash on startup.
 ### Solution
-- **Self-Healing**: Our configuration validator now automatically transforms **`sslmode=`** to **`ssl=`** at runtime to ensure compatibility with both local and cloud URLs.
+- **Self-Healing**: Our configuration validator now uses **Regex** to automatically:
+    - Transform `sslmode=` to `ssl=`.
+    - **Strip** incompatible `channel_binding` and `target_session_attrs` parameters entirety from the URL.
+- This makes the backend "immune" to standard cloud connection string variations.
 
 ## 5. Debugging "Silent Crashes" in Cloud Run [IMPLEMENTED]
 ### Problem
