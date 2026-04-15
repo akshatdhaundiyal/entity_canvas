@@ -21,7 +21,8 @@ COPY pyproject.toml uv.lock ./
 
 # Install dependencies into the system environment
 # This avoids virtualenv overhead and permission issues in containerized environments
-RUN uv sync --system --no-dev --no-install-project
+ENV UV_SYSTEM_PYTHON=1
+RUN uv sync --no-dev --no-install-project
 
 # Copy the actual backend code
 COPY . .
