@@ -9,9 +9,13 @@ services:
     container_name: entity-canvas-backend
     ports:
       - "8000:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     # Load your local credentials from backend/.env
     env_file:
       - ./backend/.env
+    environment:
+      - PORT=8080
     volumes:
       - ./backend:/app # Hot-reload source code locally
     healthcheck:
