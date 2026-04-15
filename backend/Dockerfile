@@ -23,4 +23,4 @@ USER appuser
 
 EXPOSE 8080
 
-CMD ["uv", "run", "dev"]
+CMD ["python", "main.py"]

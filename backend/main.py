@@ -61,11 +61,24 @@ async def execute_query(ast: QueryAST, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 def start():
-    """Launched with `uv run dev` at the root of the backend directory"""
+    """Launched with `uv run dev` or direct `python main.py`"""
     import uvicorn
+    import os
+    
     port = int(os.getenv("PORT", 8000))
-    reload = os.getenv("PORT") is None
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=reload)
+    host = "0.0.0.0"
+    reload = os.getenv("PORT") is None # Disable reload in production (where PORT is set)
+    
+    # Startup Diagnostics
+    print("--------------------------------------------------")
+    print(f"🚀 Starting Entity Canvas API")
+    print(f"📡 Host: {host}")
+    print(f"🔌 Port: {port}")
+    print(f"🔄 Reload: {reload}")
+    print(f"📦 DB_URL Present: {os.getenv('DATABASE_URL') is not None}")
+    print("--------------------------------------------------")
+    
+    uvicorn.run("main:app", host=host, port=port, reload=reload)
 
 if __name__ == "__main__":
     start()
