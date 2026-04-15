@@ -1,4 +1,10 @@
 import sys
+import logging
+import os
+
+# Setup Logger early
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 try:
     from fastapi import FastAPI, HTTPException, Depends
@@ -10,14 +16,10 @@ try:
     from database import get_db
     from sqlalchemy.ext.asyncio import AsyncSession
     from sqlalchemy import text
-    import logging
-    import os
-except ImportError as e:
+except Exception as e:
+    # This ensures the error is visible in Cloud Run logs before the container exits
+    print(f"❌ CRITICAL IMPORT ERROR: {str(e)}")
     sys.exit(1)
-
-# Setup Logger
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Entity Canvas API")
 
