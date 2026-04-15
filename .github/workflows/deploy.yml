@@ -55,7 +55,7 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --set-env-vars "DATABASE_URL=${{ secrets.NEON_DATABASE_URL }},ALGORITHM=HS256,ACCESS_TOKEN_EXPIRE_MINUTES=30"
+            --set-env-vars "DATABASE_URL_ENTITY_CANVAS=${{ secrets.DATABASE_URL_ENTITY_CANVAS }},DATABASE_URL_PAGILA=${{ secrets.DATABASE_URL_PAGILA }},ALGORITHM=HS256,ACCESS_TOKEN_EXPIRE_MINUTES=30"
 
       - name: Get Backend URL
         id: get-url
