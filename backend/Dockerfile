@@ -6,9 +6,12 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 
 # Create a non-root user and prepare workspace
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+RUN groupadd -r appgroup && useradd -m -r -g appgroup appuser
 WORKDIR /app
 RUN chown appuser:appgroup /app
+
+# Ensure uv has a writable cache within the app directory
+ENV UV_CACHE_DIR="/app/.uv_cache"
 
 # Switch to non-root user for all subsequent operations
 USER appuser
