@@ -17,5 +17,4 @@ venv.bak/
 .dockerignore
 .vscode
 .pytest_cache
-uv.lock
-# We want uv.lock to be synced, but let's keep it clean
+# uv.lock is intentionally NOT ignored — uv sync requires it for reproducible builds
