@@ -9,8 +9,9 @@ WORKDIR /app
 # Create a non-root user
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
-# Ensure the virtual environment is used
+# Ensure the virtual environment is used and logs are flushed immediately
 ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
 
 # Install dependencies using uv
 COPY pyproject.toml uv.lock ./
@@ -26,4 +27,4 @@ USER appuser
 
 EXPOSE 8080
 
-CMD ["python", "main.py"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

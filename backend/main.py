@@ -30,6 +30,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    logger.info("--------------------------------------------------")
+    logger.info("🚀 Entity Canvas Backend is starting up!")
+    logger.info("📡 Application configuration is loaded.")
+    logger.info("--------------------------------------------------")
+
 @app.get("/")
 async def root():
     return {"message": "Visual SQL Builder API is running"}
