@@ -32,9 +32,17 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
+    from config import settings
     logger.info("--------------------------------------------------")
     logger.info("🚀 Entity Canvas Backend is starting up!")
-    logger.info("📡 Application configuration is loaded.")
+    logger.info(f"📡 Environment: PORT={os.getenv('PORT', '8080')}")
+    # Mask the password in the URL before logging
+    db_url = settings.database_url
+    if "@" in db_url:
+        safe_url = db_url.split("@")[-1]
+        logger.info(f"🔗 Database Host: {safe_url}")
+    else:
+        logger.info(f"🔗 Database URL: {db_url}")
     logger.info("--------------------------------------------------")
 
 @app.get("/")
