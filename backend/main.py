@@ -8,6 +8,7 @@ from database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 import logging
+import os
 
 # Setup Logger
 logging.basicConfig(level=logging.INFO)
@@ -62,7 +63,9 @@ async def execute_query(ast: QueryAST, db: AsyncSession = Depends(get_db)):
 def start():
     """Launched with `uv run dev` at the root of the backend directory"""
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.getenv("PORT", 8000))
+    reload = os.getenv("PORT") is None
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=reload)
 
 if __name__ == "__main__":
     start()
