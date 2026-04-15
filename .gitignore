@@ -39,3 +39,6 @@ Thumbs.db
 # ── Docker ──────────────────────────────────────────────────────
 # Keep docker-compose.yml tracked; ignore override files
 docker-compose.override.yml
+
+# ── Project Specific ────────────────────────────────────────────
+raw_data/

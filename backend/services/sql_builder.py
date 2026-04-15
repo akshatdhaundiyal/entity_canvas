@@ -71,4 +71,11 @@ def build_sql_from_ast(ast: QueryAST) -> str:
         query = query.limit(ast.limit)
 
     # Transpile to Postgres dialect
-    return query.sql(dialect="postgres")
+    sql = query.sql(dialect="postgres")
+    
+    # 5. Safety Check: Ensure it's a SELECT statement
+    if not sql.strip().upper().startswith("SELECT"):
+        from core.exceptions import QueryValidationError
+        raise QueryValidationError("Only SELECT statements are allowed.")
+        
+    return sql

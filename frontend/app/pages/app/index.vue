@@ -2,7 +2,7 @@
 import { useQueryStore } from '~/stores/query'
 import { useWorkspaceStore, type WorkspaceTab } from '~/stores/workspace'
 
-definePageMeta({ layout: 'blank' })
+definePageMeta({ layout: 'app' })
 
 useSeoMeta({
   title: 'Workspace — Entity Canvas',
@@ -48,57 +48,10 @@ function startResize(e: MouseEvent) {
 </script>
 
 <template>
-  <div class="h-screen flex flex-col overflow-hidden" style="background: #060c1a; color: #e2e8f0;">
-
-    <!-- ── Workspace top bar ───────────────────────────────────── -->
-    <header
-      class="h-12 flex items-center px-3 gap-3 border-b border-white/5 shrink-0"
-      style="background: rgba(6,12,26,0.95); backdrop-filter: blur(12px);"
-    >
-      <!-- Logo -->
-      <NuxtLink to="/" class="flex items-center gap-2 group shrink-0">
-        <div
-          class="h-7 w-7 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-105"
-          style="background: linear-gradient(135deg, #6366f1, #22d3ee);"
-        >
-          <UIcon name="i-heroicons-cube-transparent" class="size-4 text-white" />
-        </div>
-        <span class="hidden sm:block text-sm font-bold tracking-tight text-slate-300">
-          Entity Canvas
-        </span>
-      </NuxtLink>
-
-      <div class="h-5 w-px bg-white/8" />
-
-      <!-- DB indicator -->
-      <div class="flex items-center gap-1.5 text-xs text-slate-400">
-        <div class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-        <span class="font-mono">edw_platform</span>
-      </div>
-
-      <div class="flex-1" />
-
-      <!-- Selected summary -->
-      <div class="hidden md:flex items-center gap-3 text-[11px] text-slate-500">
-        <span>{{ ws.selectedTableNames.length }} table{{ ws.selectedTableNames.length !== 1 ? 's' : '' }}</span>
-        <span class="h-3 w-px bg-white/8" />
-        <span>{{ ws.selectedColumns.length }} column{{ ws.selectedColumns.length !== 1 ? 's' : '' }}</span>
-      </div>
-
-      <!-- Actions -->
-      <UButton
-        size="xs"
-        color="neutral"
-        variant="ghost"
-        icon="i-heroicons-arrow-path"
-        :loading="query.isLoading"
-        title="Refresh schema"
-        @click="query.fetchSchema()"
-      />
-    </header>
+  <div class="h-full flex flex-col overflow-hidden" style="background: #060c1a; color: #e2e8f0;">
 
     <!-- ── Main workspace (top ~67%) ──────────────────────────── -->
-    <div class="flex overflow-hidden" style="height: 67vh; min-height: 0;">
+    <div class="flex overflow-hidden flex-1" style="min-height: 0;">
 
       <!-- ── Icon sidebar (tab switcher) ─────────────────────── -->
       <nav

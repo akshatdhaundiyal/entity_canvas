@@ -6,8 +6,9 @@ This document captures the critical technical hurdles and successfully implement
 ### Problem
 A containerized app trying to connect to a local database at `localhost:5432` will fail. Inside a container, `localhost` refers to the container itself, not the host machine.
 ### Solution
-- **Action**: We have updated `backend/.env` to use **`host.docker.internal:5432`** to reach the Windows host.
-- **Action**: We added the `extra_hosts` bridge to `docker-compose.yml` to ensure the container can resolve the host gateway.
+- **Action**: For **containerized local development**, we use **`host.docker.internal:5432`** in `backend/.env` to reach the Windows host.
+- **Action**: For **local execution outside Docker** (e.g., `uv run`), we must use **`localhost`** or **`127.0.0.1`**.
+- **Action**: We added the `extra_hosts` bridge to `docker-compose.yml` to ensure containers can resolve the host gateway.
 - **Cloud Note**: Cloud Run ignores these local bridges and uses the Neon URL provided via GitHub Secrets.
 
 ## 2. Pydantic Settings V2 & `.env` Precision [IMPLEMENTED]

@@ -35,7 +35,8 @@ graph TD
 - **Visual Query Building**: Drag-and-drop table columns to generate complex PostgreSQL.
 - **Transpilation Engine**: Powered by **SQLGlot** for safe, dialect-aware SQL generation.
 - **Modern Stack**: Nuxt 4, FastAPI, `uv`, and Nuxt UI.
-- **Enterprise-Ready**: Multi-stage Docker optimization and full CI/CD deployment to Google Cloud.
+- **Enterprise-Ready**: Multi-stage Docker optimization, modular API design, and automated testing.
+- **Security-First**: Built-in SELECT-only SQL validation and configurable CORS policies.
 
 ## 📂 Documentation Portal
 
@@ -59,6 +60,12 @@ cd backend && uv run dev
 # Start Frontend
 cd frontend && npm run dev
 ```
+
+> [!IMPORTANT]
+> **Database Management**:
+> - **Multi-Database Discovery**: The system now dynamically discovers all databases defined in `backend/.env`. Any variable starting with **`DATABASE_URL_`** (e.g., `DATABASE_URL_PAGILA`) will automatically appear in the workspace switcher.
+> - **URL Hardening**: The backend automatically adds the `+asyncpg` suffix and handles SSL parameter fixes (e.g., `sslmode=require` -> `ssl=require`).
+> - **Local Development**: If running **locally outside Docker**, use `localhost:5432`. If inside **Docker Compose**, use `host.docker.internal`.
 
 ---
 
