@@ -120,6 +120,7 @@ const relationPaths = computed(() =>
 )
 
 // ── Pan / Zoom ───────────────────────────────────────────────────
+const containerRef = ref<HTMLElement | null>(null)
 const scale = ref(1)
 const panX = ref(0)
 const panY = ref(0)
@@ -127,9 +128,21 @@ const isPanning = ref(false)
 const lastMouse = ref({ x: 0, y: 0 })
 
 function onWheel(e: WheelEvent) {
-  e.preventDefault()
-  const delta = e.deltaY > 0 ? -0.08 : 0.08
-  scale.value = Math.min(2.5, Math.max(0.3, scale.value + delta))
+  const delta = -e.deltaY * 0.0015
+  const oldScale = scale.value
+  const newScale = Math.min(2.5, Math.max(0.3, oldScale + delta))
+  
+  const zoomFactor = newScale / oldScale
+  
+  // Mouse position relative to container
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+  const mx = e.clientX - rect.left
+  const my = e.clientY - rect.top
+  
+  // Zoom towards mouse: adjust pan so mouse point stays fixed
+  panX.value = mx - (mx - panX.value) * zoomFactor
+  panY.value = my - (my - panY.value) * zoomFactor
+  scale.value = newScale
 }
 
 function onMouseDown(e: MouseEvent) {
@@ -146,6 +159,19 @@ function onMouseMove(e: MouseEvent) {
 
 function onMouseUp() { isPanning.value = false }
 
+function manualZoom(delta: number) {
+  const oldScale = scale.value
+  const newScale = Math.min(2.5, Math.max(0.3, oldScale + delta))
+  const zoomFactor = newScale / oldScale
+  
+  const mx = (containerRef.value?.clientWidth ?? VIEWBOX_W) / 2
+  const my = (containerRef.value?.clientHeight ?? VIEWBOX_H) / 2
+  
+  panX.value = mx - (mx - panX.value) * zoomFactor
+  panY.value = my - (my - panY.value) * zoomFactor
+  scale.value = newScale
+}
+
 function resetView() {
   scale.value = 1
   panX.value = 0
@@ -155,10 +181,11 @@ function resetView() {
 
 <template>
   <div
+    ref="containerRef"
     class="relative w-full h-full overflow-hidden select-none"
     style="background: #060c1a; cursor: grab;"
     :style="isPanning ? 'cursor: grabbing;' : ''"
-    @wheel.passive="onWheel"
+    @wheel.prevent="onWheel"
     @mousedown="onMouseDown"
     @mousemove="onMouseMove"
     @mouseup="onMouseUp"
@@ -179,7 +206,7 @@ function resetView() {
         class="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/8 transition-colors"
         style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);"
         title="Zoom in"
-        @click="scale = Math.min(2.5, scale + 0.15)"
+        @click="manualZoom(0.15)"
       >
         <UIcon name="i-heroicons-plus" class="size-3.5" />
       </button>
@@ -187,7 +214,7 @@ function resetView() {
         class="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/8 transition-colors"
         style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);"
         title="Zoom out"
-        @click="scale = Math.max(0.3, scale - 0.15)"
+        @click="manualZoom(-0.15)"
       >
         <UIcon name="i-heroicons-minus" class="size-3.5" />
       </button>
@@ -208,11 +235,9 @@ function resetView() {
 
     <!-- SVG canvas -->
     <svg
-      :viewBox="`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`"
-      :width="VIEWBOX_W"
-      :height="VIEWBOX_H"
+      width="100%"
+      height="100%"
       class="absolute top-0 left-0"
-      :style="`transform: translate(${panX}px, ${panY}px) scale(${scale}); transform-origin: center center;`"
     >
       <defs>
         <!-- Arrow marker for FK end -->
@@ -234,6 +259,8 @@ function resetView() {
           <circle cx="3" cy="3" r="2.5" :fill="ws.tableColor(edge.fromTable)" opacity="0.6" />
         </marker>
       </defs>
+
+      <g :style="`transform: translate(${panX}px, ${panY}px) scale(${scale}); transform-origin: 0 0;` ">
 
       <!-- ── Relation lines ──────────────────────────────────────── -->
       <path
@@ -361,8 +388,9 @@ function resetView() {
           />
         </g>
       </g>
-    </svg>
-  </div>
+    </g>
+  </svg>
+</div>
 </template>
 
 <style scoped>
