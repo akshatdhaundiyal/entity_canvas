@@ -9,7 +9,9 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set")
+    print("❌ ERROR: 'DATABASE_URL' environment variable is missing or empty.")
+    print("Please verify that NEON_DATABASE_URL is correctly set in your GitHub Environment secrets.")
+    raise ValueError("Missing DATABASE_URL")
 
 # Create Async Engine
 # echo=True will log all SQL expressions to stdout

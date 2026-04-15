@@ -38,6 +38,7 @@ graph LR
 - **Injection**: Passed to the Frontend as `NUXT_PUBLIC_API_URL` during the Cloud Run deployment stage.
 
 ## Technical Hurdles
+- **Python Environment Isolation (uv)**: Resolved `ModuleNotFoundError` by injecting `/app/.venv/bin` into the container `PATH`, ensuring that the `python` command correctly utilizes the virtual environment's dependencies.
 - **Port Mismatch (8000 vs 8080)**: Cloud Run requires containers to listen on the port provided by the `PORT` env var. Resolved by updating the Dockerfile to `EXPOSE 8080` and the app to listen dynamically.
 - **Explicit Project Targeting**: Added `--project ${{ env.PROJECT_ID }}` to all `gcloud` commands to prevent service discovery failures in shared environments.
 - **Docker Image Size**: Optimized Nuxt image via multi-stage builds (copying only the `.output` directory).

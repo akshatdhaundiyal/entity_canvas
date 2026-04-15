@@ -21,6 +21,11 @@ This document captures the distilled learnings and technical hurdles identified 
 - **Hurdle**: `gcloud run services describe` repeatedly failed with `Cannot find service [entity-canvas-backend]`.
 - **Solution**: Added `--project ${{ secrets.GCP_PROJECT_ID }}` to all `gcloud` commands to ensure the correct project context is maintained across GitHub Runner environments.
 
+## Hurdle: Python Environment Isolation (uv)
+- **Problem**: Container failed with `ModuleNotFoundError: No module named 'fastapi'` even after a successful `uv sync`.
+- **Learning**: `uv sync` creates a virtual environment in `/app/.venv`. Standard `python` calls in the Dockerfile refer to the system Python, which lacks the project dependencies.
+- **Solution**: Injected the venv binary path into the container's environment: `ENV PATH="/app/.venv/bin:$PATH"`. This ensures all `python` commands utilize the synced environment by default.
+
 ## Iteration: Multi-Stage Frontend Dockerfile
 - **Context**: The initial Nuxt Docker image was over 800MB due to node_modules and dev dependencies remaining in the final image.
 - **Learning**: Nuxt (with Nitro) generates a standalone `.output` folder that requires very few runtime dependencies.

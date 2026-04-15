@@ -9,6 +9,9 @@ WORKDIR /app
 # Create a non-root user
 RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
+# Ensure the virtual environment is used
+ENV PATH="/app/.venv/bin:$PATH"
+
 # Install dependencies using uv
 COPY pyproject.toml uv.lock ./
 RUN uv sync --no-dev --no-install-project

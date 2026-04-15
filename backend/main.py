@@ -1,14 +1,19 @@
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from models.query import QueryAST
-from services.sql_builder import build_sql_from_ast
-from services.schema_discovery import get_database_schema
-from models.schema import DatabaseSchema
-from database import get_db
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
-import logging
-import os
+import sys
+
+try:
+    from fastapi import FastAPI, HTTPException, Depends
+    from fastapi.middleware.cors import CORSMiddleware
+    from models.query import QueryAST
+    from services.sql_builder import build_sql_from_ast
+    from services.schema_discovery import get_database_schema
+    from models.schema import DatabaseSchema
+    from database import get_db
+    from sqlalchemy.ext.asyncio import AsyncSession
+    from sqlalchemy import text
+    import logging
+    import os
+except ImportError as e:
+    sys.exit(1)
 
 # Setup Logger
 logging.basicConfig(level=logging.INFO)
@@ -62,23 +67,18 @@ async def execute_query(ast: QueryAST, db: AsyncSession = Depends(get_db)):
 
 def start():
     """Launched with `uv run dev` or direct `python main.py`"""
-    import uvicorn
-    import os
-    
-    port = int(os.getenv("PORT", 8000))
-    host = "0.0.0.0"
-    reload = os.getenv("PORT") is None # Disable reload in production (where PORT is set)
-    
-    # Startup Diagnostics
-    print("--------------------------------------------------")
-    print(f"🚀 Starting Entity Canvas API")
-    print(f"📡 Host: {host}")
-    print(f"🔌 Port: {port}")
-    print(f"🔄 Reload: {reload}")
-    print(f"📦 DB_URL Present: {os.getenv('DATABASE_URL') is not None}")
-    print("--------------------------------------------------")
-    
-    uvicorn.run("main:app", host=host, port=port, reload=reload)
+    try:
+        import uvicorn
+        import os
+        
+        port = int(os.getenv("PORT", 8000))
+        host = "0.0.0.0"
+        reload = os.getenv("PORT") is None # Disable reload in production
+        
+        uvicorn.run("main:app", host=host, port=port, reload=reload)
+    except Exception as e:
+        print(f"❌ FATAL ERROR during server startup: {str(e)}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     start()
