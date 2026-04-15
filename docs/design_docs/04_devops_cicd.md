@@ -42,6 +42,7 @@ graph LR
 - **Port Mismatch (8000 vs 8080)**: Cloud Run requires containers to listen on the port provided by the `PORT` env var. Resolved by updating the Dockerfile to `EXPOSE 8080` and the app to listen dynamically.
 - **Explicit Project Targeting**: Added `--project ${{ env.PROJECT_ID }}` to all `gcloud` commands to prevent service discovery failures in shared environments.
 - **Docker Image Size**: Optimized Nuxt image via multi-stage builds (copying only the `.output` directory).
+- **Frontend Build-Time Injection**: Discovered that Nuxt requires `NUXT_PUBLIC_API_URL` during the `npm run build` phase to bake the URL into client-side JS. Resolved by adding `ARG` and `ENV` to the Dockerfile to "catch" the build-arguments from GitHub Actions.
 
 ## Verification
 - [x] Unified `deploy.yml` completes sequentially.

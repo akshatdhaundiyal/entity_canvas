@@ -60,6 +60,12 @@ cd backend && uv run dev
 cd frontend && npm run dev
 ```
 
+> [!IMPORTANT]
+> **Database Connections**:
+> - If running **locally outside Docker** (`uv run`), use `localhost` in `backend/.env`.
+> - If running **inside Docker Compose**, use `host.docker.internal` to reach your host Postgres.
+> - Ensure **`postgresql+asyncpg://`** is used for all connection strings.
+
 ---
 
 > [!NOTE]
