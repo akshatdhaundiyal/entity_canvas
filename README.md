@@ -45,17 +45,29 @@ We maintain a comprehensive internal design and architectural record:
 - **[Design Documentation Index](file:///d:/self_work/projects/entity_canvas/docs/design_docs/00_milestone_summary.md)**: Explore the technical design, milestones, and architectural decisions.
 - **[DevOps & Setup](file:///d:/self_work/projects/entity_canvas/docs/design_docs/04_devops_cicd.md)**: Instructions for GCR deployment and secret configuration.
 - **[Knowledge Base](file:///d:/self_work/projects/entity_canvas/docs/knowledge_base/01_tech_hurdles.md)**: Distilled learnings and technical "gotchas."
+- **[Docker Dev Patterns](file:///d:/self_work/projects/entity_canvas/docs/knowledge_base/05_docker_dev_patterns.md)**: Deep dive into hot-reload and dependency shielding.
 
 ## 🛠️ Local Development
 
 ### Prerequisites
-- Python 3.11+ & **[uv](https://docs.astral.sh/uv/)**
-- Node.js 20+
+- **Docker & Docker Compose**
+- Node.js 20+ (for local typegen)
+- [uv](https://docs.astral.sh/uv/) (optional, for local backend development)
 
-### Quick Start
+### Quick Start (Dockerized)
+The easiest way to start the entire stack (Frontend, Backend, and a local Pagila Database):
+```bash
+# Start all services
+docker compose up -d
+
+# Generate shared types (requires backend to be up)
+cd frontend && npm run typegen
+```
+
+### Manual Development (Outside Docker)
 ```bash
 # Start Backend
-cd backend && uv run dev
+cd backend && uv run uvicorn main:app --reload
 
 # Start Frontend
 cd frontend && npm run dev

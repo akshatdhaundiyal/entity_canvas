@@ -66,13 +66,13 @@ function copySQL() {
       </div>
     </div>
 
-    <!-- Error state -->
-    <div v-else-if="query.error" class="flex-1 flex items-start p-4">
+    <!-- Error state (Schema only) -->
+    <div v-else-if="query.schemaError" class="flex-1 flex items-start p-4">
       <UAlert
         color="error"
         variant="subtle"
         icon="i-heroicons-exclamation-triangle"
-        :title="query.error"
+        :title="query.schemaError"
         class="text-xs"
       />
     </div>

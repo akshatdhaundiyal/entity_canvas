@@ -118,12 +118,12 @@ async function runQuery() {
     </div>
 
     <!-- Error state -->
-    <div v-if="errorMsg" class="px-4 py-3 shrink-0">
+    <div v-if="errorMsg || query.queryError" class="px-4 py-3 shrink-0">
       <UAlert
         color="error"
         variant="subtle"
         icon="i-heroicons-exclamation-circle"
-        :title="errorMsg"
+        :title="errorMsg || query.queryError"
         class="text-xs"
       />
     </div>

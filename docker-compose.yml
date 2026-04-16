@@ -1,7 +1,26 @@
 # Docker Compose for Entity Canvas
-# This version is configured to connect to your EXTERNAL local Postgres database
+# Optimized for development with hot-reload and dependency shielding
 
 services:
+  db:
+    image: postgres:17-alpine
+    container_name: entity-canvas-db
+    environment:
+      - POSTGRES_DB=entity_canvas
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/init-db.sh:/docker-entrypoint-initdb.d/01-init-db.sh
+      - ./db/local_pagila.sql:/tmp/local_pagila.sql
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d entity_canvas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     build: 
       context: ./backend
@@ -11,13 +30,20 @@ services:
       - "8000:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    # Load your local credentials from backend/.env
     env_file:
       - ./backend/.env
     environment:
       - PORT=8080
+      - DATABASE_URL=postgresql+asyncpg://postgres:admin@db:5432/entity_canvas
+      - DATABASE_URL_LOCAL=postgresql+asyncpg://postgres:admin@db:5432/entity_canvas
+      - DATABASE_URL_LOCAL_PAGILA=postgresql+asyncpg://postgres:admin@db:5432/pagila
     volumes:
-      - ./backend:/app # Hot-reload source code locally
+      - ./backend:/app          # Sync source code
+      - /app/.venv              # Shadow volume to protect container dependencies
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
       interval: 10s
@@ -28,13 +54,21 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: development      # Target the development stage in Dockerfile
     container_name: entity-canvas-frontend
     ports:
       - "3000:3000"
     environment:
-      - NUXT_PUBLIC_API_URL=http://backend:8080
+      - NUXT_PUBLIC_API_BASE=http://localhost:8000
+      - NUXT_API_BASE=http://backend:8080
+      - CHOKIDAR_USEPOLLING=true  # Better file watching on Windows
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./frontend:/app         # Sync source code
+      - /app/node_modules        # Shadow volume to protect container dependencies
     depends_on:
       backend:
         condition: service_healthy
 
-# End of Compose
+volumes:
+  pgdata:
