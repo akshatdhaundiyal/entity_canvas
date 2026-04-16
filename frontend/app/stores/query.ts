@@ -1,26 +1,6 @@
 import { defineStore } from 'pinia'
 import { useConnectionStore } from './connection'
-
-export interface ColumnMetadata {
-  name: string
-  data_type: string
-  is_nullable: boolean
-  default_value: string | null
-}
-
-export interface TableMetadata {
-  name: string
-  columns: ColumnMetadata[]
-}
-
-export interface QueryAST {
-  select: { table: string; column: string; alias?: string }[]
-  from: string
-  joins: { table: string; on: string; type: 'INNER' | 'LEFT' }[]
-  where: { column: string; operator: string; value: any; logic: 'AND' | 'OR' }[]
-  sorts: { column: string; direction: 'ASC' | 'DESC' }[]
-  limit: number
-}
+import type { TableMetadata, QueryAST } from '~/types'
 
 export const useQueryStore = defineStore('query', {
   state: () => ({
@@ -33,13 +13,14 @@ export const useQueryStore = defineStore('query', {
       limit: 100
     } as QueryAST,
     availableTables: [] as TableMetadata[],
-    activeTableName: '' as string,
+    activeTableName: null as string | null,
     tableSearchQuery: '',
     columnSearchQuery: '',
     results: [] as any[],
     sql: '',
     isLoading: false,
-    error: null as string | null
+    schemaError: null as string | null,
+    queryError: null as string | null
   }),
 
   getters: {
@@ -66,13 +47,17 @@ export const useQueryStore = defineStore('query', {
   actions: {
     async fetchSchema() {
       this.isLoading = true
+      this.schemaError = null
       try {
         const config = useRuntimeConfig()
         const connectionStore = useConnectionStore()
         
         console.log(`Fetching schema from database: ${connectionStore.activeConnection}`)
         
-        const response = await $fetch(`${config.public.apiBaseUrl}/api/schema`, {
+        // Select internal URL for SSR, external for Client
+        const apiBase = import.meta.server ? (config as any).apiBase : config.public.apiBase
+        
+        const response = await $fetch(`${apiBase}/api/schema`, {
           headers: {
             'X-Database-Alias': connectionStore.activeConnection
           }
@@ -87,7 +72,7 @@ export const useQueryStore = defineStore('query', {
         }
       } catch (e: any) {
         console.error('Schema fetch error:', e)
-        this.error = `Failed to fetch schema: ${e.message}`
+        this.schemaError = e.message || 'Failed to load schema'
       } finally {
         this.isLoading = false
       }
@@ -109,7 +94,7 @@ export const useQueryStore = defineStore('query', {
 
     async executeQuery() {
       this.isLoading = true
-      this.error = null
+      this.queryError = null
       
       try {
         const config = useRuntimeConfig()
@@ -117,7 +102,9 @@ export const useQueryStore = defineStore('query', {
         
         console.log(`Executing query on database: ${connectionStore.activeConnection}`)
         
-        const response = await $fetch(`${config.public.apiBaseUrl}/api/query/execute`, {
+        const apiBase = import.meta.server ? (config as any).apiBase : config.public.apiBase
+        
+        const response = await $fetch(`${apiBase}/api/query/execute`, {
           method: 'POST',
           body: this.query,
           headers: {
@@ -131,7 +118,8 @@ export const useQueryStore = defineStore('query', {
         this.sql = res.sql
       } catch (e: any) {
         console.error('Execution error:', e)
-        this.error = e.message
+        this.queryError = e.message || 'Query execution failed'
+        throw e
       } finally {
         this.isLoading = false
       }

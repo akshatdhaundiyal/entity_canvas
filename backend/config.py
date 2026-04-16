@@ -61,9 +61,12 @@ class Settings(BaseSettings):
         # 1. Look for .env ONLY in the backend folder (script directory)
         env_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), '.env')
         
-        all_vars = dict(os.environ)
+        all_vars = {}
         if os.path.exists(env_path):
             all_vars.update(dotenv_values(env_path))
+        
+        # OS Environment variables must ALWAYS override .env files
+        all_vars.update(dict(os.environ))
         
         # 2. Scan for dynamic DATABASE_URL_* keys
         for key, value in all_vars.items():

@@ -30,6 +30,11 @@ async def execute_query(ast: QueryAST, db: AsyncSession = Depends(get_db)):
         }
     except Exception as e:
         logger.error(f"Error executing query: {str(e)}")
-        # Check if it's our validation error or something else
+        
+        # Determine if it's a client error (invalid SQL) or server error
+        error_msg = str(e)
+        if "UndefinedTableError" in error_msg or "UndefinedColumnError" in error_msg or "missing FROM-clause" in error_msg:
+            raise HTTPException(status_code=400, detail=f"Database Error: {error_msg}")
+            
         status_code = getattr(e, "status_code", 500)
-        raise HTTPException(status_code=status_code, detail=str(e))
+        raise HTTPException(status_code=status_code, detail=error_msg)

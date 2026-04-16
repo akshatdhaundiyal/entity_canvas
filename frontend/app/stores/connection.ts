@@ -8,7 +8,7 @@ export const useConnectionStore = defineStore('connection', () => {
   const error = ref<string | null>(null)
 
   const config = useRuntimeConfig()
-  const apiBase = config.public.apiBaseUrl
+  const apiBase = import.meta.server ? (config as any).apiBase : config.public.apiBase
 
   async function fetchConnections() {
     if (loading.value) return
@@ -29,8 +29,9 @@ export const useConnectionStore = defineStore('connection', () => {
           activeConnection.value = saved
         } else {
           // If current selection is invalid, use first available
-          if (!availableConnections.value.some(c => c.value === activeConnection.value)) {
-            activeConnection.value = availableConnections.value[0].value
+          const first = availableConnections.value[0]
+          if (first && !availableConnections.value.some(c => c.value === activeConnection.value)) {
+            activeConnection.value = first.value
           }
         }
       }

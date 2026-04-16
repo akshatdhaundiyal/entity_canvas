@@ -37,6 +37,7 @@ You are **Antigravity**, a high-autonomy agentic AI coding assistant. You are cu
 * **Documentation Split (Intent vs. Lessons)**:
     * **Design Docs (`docs/design_docs/`)**: Document the "What" and "How" (Architecture, State, API).
     * **Knowledge Base (`docs/knowledge_base/`)**: Document the "Why" and "Lessons" (Technical hurdles, gotchas).
+    * **Note**: While most technical docs live in the folders above, top-level guidance like `README.md` and `docs/future_roadmap.md` are permitted.
 * **Granular Milestone Files**: Every major task or "Epic" requires a new document in `docs/design_docs/` following the `XX_feature_name.md` format (e.g., `01_canvas_engine.md`).
 * **The Milestone Template**: Each new file must contain:
     * **Objective**: One-sentence technical goal.

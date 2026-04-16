@@ -13,7 +13,7 @@ export default defineNuxtConfig({
   ],
 
   css: ['~/assets/css/main.css'],
-
+  
   // Nuxt UI v4 handles Tailwind v4 internally — no postcss or tailwind plugin needed
   app: {
     head: {
@@ -42,8 +42,11 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    // Private: used on server-side only (merged with NUXT_API_BASE)
+    apiBase: process.env.NUXT_API_BASE || 'http://backend:8080',
     public: {
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8000',
+      // Public: used on both client and server (merged with NUXT_PUBLIC_API_BASE)
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000',
     },
   },
 })
